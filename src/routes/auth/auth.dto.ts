@@ -1,3 +1,4 @@
+import { Exclude, Expose } from 'class-transformer'
 import { IsString } from 'class-validator'
 
 export class LoginBodyDTO {
@@ -14,4 +15,18 @@ export class RegisterBodyDTO extends LoginBodyDTO {
 
   @IsString()
   confirmPassword: string
+}
+
+export class RegisterResponseDTO {
+  id: number
+  email: string
+  name: string
+  @Exclude()
+  password: string
+  createdAt: Date
+  updatedAt: Date
+
+  constructor(partial: Partial<RegisterResponseDTO>) {
+    Object.assign(this, partial)
+  }
 }
