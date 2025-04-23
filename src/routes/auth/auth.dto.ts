@@ -17,6 +17,15 @@ export class RegisterBodyDTO extends LoginBodyDTO {
   confirmPassword: string
 }
 
+export class LoginResponseDTO {
+  accessToken: string
+  refreshToken: string
+
+  constructor(partial: Partial<LoginResponseDTO>) {
+    Object.assign(this, partial)
+  }
+}
+
 export class RegisterResponseDTO {
   id: number
   email: string
@@ -30,3 +39,10 @@ export class RegisterResponseDTO {
     Object.assign(this, partial)
   }
 }
+
+export class RefreshTokenBodyDTO {
+  @IsString()
+  refreshToken: string
+}
+
+export class RefreshTokenResponseDTO extends LoginResponseDTO {}
