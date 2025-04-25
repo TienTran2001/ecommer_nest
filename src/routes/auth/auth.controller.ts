@@ -1,5 +1,6 @@
-import { Body, Controller, Post } from '@nestjs/common'
-import { AuthService } from './auth.service'
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common'
+import { REQUEST_USER_KEY } from 'src/shared/constants/auth.constants'
+import { AccessTokenGuard } from 'src/shared/guards/access-token.guard'
 import {
   LoginBodyDTO,
   LoginResponseDTO,
@@ -8,6 +9,7 @@ import {
   RegisterBodyDTO,
   RegisterResponseDTO,
 } from './auth.dto'
+import { AuthService } from './auth.service'
 
 @Controller('auth')
 export class AuthController {
@@ -25,8 +27,10 @@ export class AuthController {
     return new LoginResponseDTO(response)
   }
 
+  @UseGuards(AccessTokenGuard)
   @Post('refresh-token')
-  async refreshToken(@Body() body: RefreshTokenBodyDTO) {
+  async refreshToken(@Body() body: RefreshTokenBodyDTO, @Req() req: Request) {
+    console.log('user: ', req[REQUEST_USER_KEY])
     const response = await this.authService.refreshToken(body.refreshToken)
     return new RefreshTokenResponseDTO(response)
   }
