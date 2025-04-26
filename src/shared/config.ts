@@ -29,6 +29,9 @@ class ConfigSchema {
 
   @IsString()
   REFRESH_TOKEN_EXPIRES_IN: string
+
+  @IsString()
+  SECRET_API_KEY: string
 }
 
 const configServer = plainToInstance(ConfigSchema, process.env)
@@ -40,7 +43,7 @@ if (errors.length > 0) {
     return {
       property: e.property,
       constraints: e.constraints,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
       value: e.value,
     }
   })
