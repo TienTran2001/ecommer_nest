@@ -1,7 +1,6 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Post } from '@nestjs/common'
 import { AuthTypes, ConditionGuard } from 'src/shared/constants/auth.constants'
 import { Auth } from 'src/shared/decorators/auth.decorator'
-import { AuthenticationGuard } from 'src/shared/guards/authentication.guard'
 import { PostsService } from './posts.service'
 
 @Controller('posts')
@@ -11,8 +10,7 @@ export class PostsController {
   // @UseGuards(APIKeyGuard)
   // @UseGuards(AccessTokenGuard)
 
-  @Auth([AuthTypes.Bearer, AuthTypes.ApiKey], { condition: ConditionGuard.Or })
-  @UseGuards(AuthenticationGuard)
+  @Auth([AuthTypes.Bearer, AuthTypes.ApiKey], { condition: ConditionGuard.And })
   @Get()
   getPosts() {
     return this.postService.getPost()

@@ -9,7 +9,7 @@ import { APIKeyGuard } from 'src/shared/guards/api-key.guard'
 export class AuthenticationGuard implements CanActivate {
   private readonly authTypeGuardMap: Record<string, CanActivate>
   constructor(
-    private reflector: Reflector,
+    private readonly reflector: Reflector,
     private readonly accessTokenGuard: AccessTokenGuard,
     private readonly apiKeyGuard: APIKeyGuard,
   ) {
@@ -25,22 +25,29 @@ export class AuthenticationGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]) ?? { authTypes: [AuthTypes.None], options: { condition: ConditionGuard.And } }
-    console.log('authTypeValue:', authTypeValue)
 
     const guards = authTypeValue.authTypes.map((authType) => this.authTypeGuardMap[authType])
+
+    let error = new UnauthorizedException()
     if (authTypeValue.options.condition === ConditionGuard.Or) {
       for (const instance of guards) {
-        const canActivate = await instance.canActivate(context)
+        const canActivate = await Promise.resolve(instance.canActivate(context)).catch((err) => {
+          error = err
+          return false
+        })
         if (canActivate) {
           return true
         }
       }
-      throw new UnauthorizedException()
+      throw error
     } else {
       for (const instance of guards) {
-        const canActivate = await instance.canActivate(context)
+        const canActivate = await Promise.resolve(instance.canActivate(context)).catch((err) => {
+          error = err
+          return false
+        })
         if (!canActivate) {
-          throw new UnauthorizedException()
+          throw error
         }
       }
     }
