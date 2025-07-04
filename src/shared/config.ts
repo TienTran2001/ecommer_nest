@@ -1,8 +1,7 @@
-import { plainToInstance } from 'class-transformer'
-import { IsString, validateSync } from 'class-validator'
 import { config } from 'dotenv'
 import fs from 'fs'
 import path from 'path'
+import z from 'zod'
 
 config({
   path: '.env',
@@ -14,42 +13,27 @@ if (!fs.existsSync(path.resolve('.env'))) {
   process.exit(1)
 }
 
-class ConfigSchema {
-  @IsString()
-  DATABASE_URL: string
+const configSchema = z.object({
+  DATABASE_URL: z.string(),
+  ACCESS_TOKEN_SECRET: z.string(),
+  ACCESS_TOKEN_EXPIRES_IN: z.string(),
+  REFRESH_TOKEN_SECRET: z.string(),
+  REFRESH_TOKEN_EXPIRES_IN: z.string(),
+  SECRET_API_KEY: z.string(),
 
-  @IsString()
-  ACCESS_TOKEN_SECRET: string
+  ADMIN_EMAIL: z.string(),
+  ADMIN_PASSWORD: z.string(),
+  ADMIN_PHONE_NUMBER: z.string(),
+  ADMIN_NAME: z.string(),
+})
 
-  @IsString()
-  ACCESS_TOKEN_EXPIRES_IN: string
-
-  @IsString()
-  REFRESH_TOKEN_SECRET: string
-
-  @IsString()
-  REFRESH_TOKEN_EXPIRES_IN: string
-
-  @IsString()
-  SECRET_API_KEY: string
+const configServer = configSchema.safeParse(process.env)
+if (!configServer.success) {
+  console.log('The values declared in the .env file are invalid')
+  console.error(configServer.error)
+  process.exit(1)
 }
 
-const configServer = plainToInstance(ConfigSchema, process.env)
-const errors = validateSync(configServer)
-
-if (errors.length > 0) {
-  console.log('Error in config file')
-  const errorMessages = errors.map((e) => {
-    return {
-      property: e.property,
-      constraints: e.constraints,
-
-      value: e.value,
-    }
-  })
-  throw errorMessages
-}
-
-const envConfig = configServer
+const envConfig = configServer.data
 
 export default envConfig

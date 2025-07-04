@@ -1,20 +1,11 @@
-import { ClassSerializerInterceptor, Module } from '@nestjs/common'
+import { Module } from '@nestjs/common'
+import { AppService } from 'src/app.service'
+import { SharedModule } from 'src/shared/shared.module'
 import { AppController } from './app.controller'
-import { AppService } from './app.service'
-import { PostsModule } from './routes/posts/posts.module'
-import { SharedModule } from './shared/shared.module'
-import { AuthModule } from './routes/auth/auth.module'
-import { APP_INTERCEPTOR } from '@nestjs/core'
 
 @Module({
-  imports: [PostsModule, SharedModule, AuthModule],
+  imports: [SharedModule],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: ClassSerializerInterceptor,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}
