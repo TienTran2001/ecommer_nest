@@ -1,4 +1,6 @@
 import { Body, Controller, Post, Req } from '@nestjs/common'
+import { ZodSerializerDto } from 'nestjs-zod'
+import { RegisterBodyDTO, RegisterResponseDTO } from 'src/routers/auth/auth.dto'
 import { REQUEST_USER_KEY } from 'src/shared/constants/auth.constants'
 import { AuthService } from './auth.service'
 
@@ -7,7 +9,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() body: any) {
+  @ZodSerializerDto(RegisterResponseDTO)
+  async register(@Body() body: RegisterBodyDTO) {
     console.log('body: ', body)
     const user = await this.authService.register(body)
     return user
