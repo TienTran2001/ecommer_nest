@@ -1,10 +1,5 @@
+import { UserStatus } from 'src/shared/constants/auth.constants'
 import { z } from 'zod'
-
-export enum UserStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  BLOCKED = 'BLOCKED',
-}
 
 export const UserSchema = z.object({
   id: z.number(),
@@ -14,7 +9,7 @@ export const UserSchema = z.object({
   phoneNumber: z.string().min(9).max(15),
   avatar: z.string().nullable(),
   totpSecret: z.string().nullable(),
-  status: z.nativeEnum(UserStatus),
+  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.BLOCKED]),
   roleId: z.number().positive(),
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),

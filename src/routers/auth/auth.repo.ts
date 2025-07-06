@@ -7,7 +7,9 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 export class AuthRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createUser(user: Omit<RegisterBodyType, 'confirmPassword'> & Pick<UserType, 'roleId'>) {
+  async createUser(
+    user: Omit<RegisterBodyType, 'confirmPassword'> & Pick<UserType, 'roleId'>,
+  ): Promise<Omit<UserType, 'password' | 'totpSecret'>> {
     try {
       const res = await this.prismaService.user.create({
         data: user,
