@@ -1,15 +1,22 @@
-import { Injectable } from '@nestjs/common'
-import { RegisterBodyType } from 'src/routers/auth/auth.model'
+import { Injectable, Logger, UnprocessableEntityException } from '@nestjs/common'
+import { addMilliseconds } from 'date-fns'
+import ms from 'ms'
+import { RegisterBodyType, SendOTPBodyType } from 'src/routers/auth/auth.model'
 import { AuthRepository } from 'src/routers/auth/auth.repo'
 import { RolesService } from 'src/routers/auth/roles.service'
+import envConfig from 'src/shared/config'
+import { generateOTP } from 'src/shared/helpers'
+import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { HashingService } from 'src/shared/services/hashing.service'
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name)
   constructor(
     private readonly hashingService: HashingService,
     private readonly roleService: RolesService,
     private readonly authRepository: AuthRepository,
+    private readonly sharedUserRepository: SharedUserRepository,
   ) {}
 
   async register(body: RegisterBodyType) {
@@ -22,6 +29,32 @@ export class AuthService {
       password: hashedPassword,
       roleId: clientRoleId,
     })
+  }
+
+  async sendOTP(body: SendOTPBodyType) {
+    // 1. check if email is exist
+    const existingUser = await this.sharedUserRepository.findUnique({ email: body.email })
+    this.logger.debug(`Existing user: ${JSON.stringify(existingUser)}`)
+    if (existingUser) {
+      throw new UnprocessableEntityException([
+        // error code 422
+        {
+          path: 'email',
+          message: 'Email is already exist',
+        },
+      ])
+    }
+    // 2. create otp
+    const code = generateOTP()
+
+    const verificationCode = await this.authRepository.createVerificationCode({
+      email: body.email,
+      code,
+      type: body.type,
+      expiresAt: addMilliseconds(new Date(), ms(envConfig.OTP_EXPIRES_IN)),
+    })
+
+    return verificationCode
   }
 
   // async login(body: any) {
