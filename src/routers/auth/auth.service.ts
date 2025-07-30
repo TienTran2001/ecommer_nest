@@ -5,6 +5,7 @@ import { RegisterBodyType, SendOTPBodyType } from 'src/routers/auth/auth.model'
 import { AuthRepository } from 'src/routers/auth/auth.repo'
 import { RolesService } from 'src/routers/auth/roles.service'
 import envConfig from 'src/shared/config'
+import { TypeOfVerificationCode } from 'src/shared/constants/auth.constants'
 import { generateOTP } from 'src/shared/helpers'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -20,6 +21,28 @@ export class AuthService {
   ) {}
 
   async register(body: RegisterBodyType) {
+    const verificationCode = await this.authRepository.findUniqueVerificationCode({
+      email: body.email,
+      code: body.code,
+      type: TypeOfVerificationCode.REGISTER,
+    })
+    if (!verificationCode) {
+      throw new UnprocessableEntityException([
+        {
+          path: 'code',
+          message: 'Invalid OTP code',
+        },
+      ])
+    }
+
+    if (verificationCode.expiresAt < new Date()) {
+      throw new UnprocessableEntityException([
+        {
+          path: 'code',
+          message: 'OTP code has expired',
+        },
+      ])
+    }
     const clientRoleId = await this.roleService.getClientRoleId()
     const hashedPassword = await this.hashingService.hash(body.password)
     return this.authRepository.createUser({
