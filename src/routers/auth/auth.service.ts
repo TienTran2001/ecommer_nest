@@ -8,6 +8,7 @@ import envConfig from 'src/shared/config'
 import { TypeOfVerificationCode } from 'src/shared/constants/auth.constants'
 import { generateOTP } from 'src/shared/helpers'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
+import { EmailService } from 'src/shared/services/email.service'
 import { HashingService } from 'src/shared/services/hashing.service'
 
 @Injectable()
@@ -18,6 +19,7 @@ export class AuthService {
     private readonly roleService: RolesService,
     private readonly authRepository: AuthRepository,
     private readonly sharedUserRepository: SharedUserRepository,
+    private readonly emailService: EmailService,
   ) {}
 
   async register(body: RegisterBodyType) {
@@ -69,7 +71,6 @@ export class AuthService {
     }
     // 2. create otp
     const code = generateOTP()
-
     const verificationCode = await this.authRepository.createVerificationCode({
       email: body.email,
       code,
@@ -77,6 +78,15 @@ export class AuthService {
       expiresAt: addMilliseconds(new Date(), ms(envConfig.OTP_EXPIRES_IN)),
     })
 
+    const { error } = await this.emailService.sendOTP({ email: body.email, code })
+    if (error) {
+      throw new UnprocessableEntityException([
+        {
+          path: 'code',
+          message: 'Failed to send OTP code',
+        },
+      ])
+    }
     return verificationCode
   }
 
