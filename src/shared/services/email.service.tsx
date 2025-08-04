@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common'
+import { OTPEmail } from 'emails/otp'
+import * as React from 'react'
 import { Resend } from 'resend'
 import envConfig from 'src/shared/config'
 
@@ -15,7 +17,7 @@ export class EmailService {
       from: 'Ecommerce <onboarding@resend.dev>',
       to: [payload.email],
       subject: 'Mã OTP',
-      html: `<strong>${payload.code}</strong>`,
+      react: <OTPEmail otpCode={payload.code} title="Mã OTP" />,
     })
   }
 }
