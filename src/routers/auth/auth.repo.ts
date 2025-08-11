@@ -1,5 +1,11 @@
 import { ConflictException, Injectable } from '@nestjs/common'
-import { DeviceType, RegisterBodyType, RoleType, VerificationCodeType } from 'src/routers/auth/auth.model'
+import {
+  DeviceType,
+  RefreshTokenType,
+  RegisterBodyType,
+  RoleType,
+  VerificationCodeType,
+} from 'src/routers/auth/auth.model'
 import { TypeOfVerificationCodeType } from 'src/shared/constants/auth.constants'
 import { isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { UserType } from 'src/shared/models/shared-user-model'
@@ -68,7 +74,6 @@ export class AuthRepository {
   createDevice(
     data: Pick<DeviceType, 'userId' | 'userAgent' | 'ip'> & Partial<Pick<DeviceType, 'lastActive' | 'isActive'>>,
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.prismaService.device.create({
       data,
     })
@@ -81,6 +86,36 @@ export class AuthRepository {
       include: {
         role: true,
       },
+    })
+  }
+
+  findUniqueRefreshTokenIncludeRole(uniqueObject: {
+    token: string
+  }): Promise<(RefreshTokenType & { user: UserType & { role: RoleType } }) | null> {
+    return this.prismaService.refreshToken.findUnique({
+      where: uniqueObject,
+      include: {
+        user: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    })
+  }
+
+  updateDevice(deviceId: number, data: Partial<DeviceType>): Promise<DeviceType> {
+    return this.prismaService.device.update({
+      where: {
+        id: deviceId,
+      },
+      data,
+    })
+  }
+
+  deleteRefreshToken(uniqueObject: { token: string }): Promise<RefreshTokenType> {
+    return this.prismaService.refreshToken.delete({
+      where: uniqueObject,
     })
   }
 }
