@@ -9,7 +9,9 @@ import {
   RegisterResponseDTO,
   SendOTPBodyDTO,
 } from 'src/routers/auth/auth.dto'
+import { IsPublic } from 'src/shared/decorators/auth.decorator'
 import { UserAgent } from 'src/shared/decorators/user-agent-decorator'
+import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { AuthService } from './auth.service'
 
 @Controller('auth')
@@ -17,6 +19,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @IsPublic()
   @ZodSerializerDto(RegisterResponseDTO)
   async register(@Body() body: RegisterBodyDTO) {
     const user = await this.authService.register(body)
@@ -24,11 +27,14 @@ export class AuthController {
   }
 
   @Post('otp')
+  @IsPublic()
+  @ZodSerializerDto(MessageResDTO)
   sendOTP(@Body() body: SendOTPBodyDTO) {
     return this.authService.sendOTP(body)
   }
 
   @Post('login')
+  @IsPublic()
   @ZodSerializerDto(LoginResponseDTO)
   async login(@Body() body: LoginBodyDTO, @UserAgent() userAgent: string, @Ip() ip: string) {
     const response = await this.authService.login({
